@@ -1,13 +1,13 @@
 package config
 
-systems: [#Oplysningen]
+systems: [#Opl]
 
-#Oplysningen: #System & {
-	name:           "oplysningen"
+#Opl: #System & {
+	name:           "opl"
 	domain:         "exoreaction.dev"
 	routing_method: "host"
 	cidr:           "10.0.0.0/24"
-	zone:           "catalyst_one.infra"
+	zone:           "co.infra"
 	clusters: [#nerthus, #visuale]
 }
 
