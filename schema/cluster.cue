@@ -19,7 +19,7 @@ import "list"
 }
 
 _#node: {
-	os:   *"Amazon Linux 2023" | "Amazon Linux 2"
+	os:   #OS | *"Amazon Linux 2023"
 	arch: string
 	size: string
 }

@@ -17,7 +17,12 @@ package config
 		webserver_port_key: "webserver.port"
 		not_cluster_able:   true
 		is_frontend:        true
-		roles: []
-		services: []
+		features: [
+			"zulu",
+			"java17",
+			"cron",
+		]
+		packages: []
+		services: ["nerthus"]
 	}
 }

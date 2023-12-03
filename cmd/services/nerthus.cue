@@ -17,7 +17,13 @@ package config
 		webserver_port_key: "webserver.port"
 		not_cluster_able:   true
 		is_frontend:        true
-		roles: []
+		features: [
+			"ansible",
+			"pythonAWS",
+			"buri",
+			"cron",
+		]
+		packages: []
 		services: []
 	}
 }

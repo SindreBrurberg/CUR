@@ -3,6 +3,7 @@ package config
 import (
 	"embed"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io"
 	iofs "io/fs"
@@ -16,17 +17,16 @@ import (
 	"cuelang.org/go/cue/load"
 
 	"github.com/cantara/bragi/sbragi"
-	"gopkg.in/yaml.v2"
 )
 
 //go:embed schema/*
-var fs embed.FS
+var FS embed.FS
 
 type rt struct {
 	CurrentDirectory string `json:"currentDirectory"`
 }
 
-func LoadDirs() {
+func LoadDirs() (cfgs []Root) {
 	wd, err := os.Getwd()
 	if err != nil {
 		sbragi.WithError(err).Fatal("while getting wd")
@@ -41,6 +41,12 @@ func LoadDirs() {
 		if d.IsDir() {
 
 			switch strings.ToLower(filepath.Base(path)) {
+			case "packages":
+				fallthrough
+			case "packageManagers":
+				fallthrough
+			case "features":
+				fallthrough
 			case "services":
 				fallthrough
 			case "roles":
@@ -72,8 +78,9 @@ func LoadDirs() {
 	if err != nil {
 		sbragi.WithError(err).Fatal("walked dir")
 	}
-	var cfg Environment
-	for _, system := range systems {
+	//var cfg root
+	cfgs = make([]Root, len(systems))
+	for i, system := range systems {
 		files := files
 		err = filepath.WalkDir(system, func(path string, d iofs.DirEntry, err error) error {
 			if d.IsDir() {
@@ -90,74 +97,24 @@ func LoadDirs() {
 			sbragi.WithError(err).Fatal("walked system dir", "root", system)
 		}
 		//TODO: get all subdirs with the exception of the files dir
-		if err := Load(wd, files, fs, &cfg); err != nil {
+		if err := Load(wd, files, FS, &cfgs[i]); err != nil {
 			fmt.Printf("%v\n", err)
 			return
 		}
-		data, _ := yaml.Marshal(cfg)
+		//data, _ := yaml.Marshal(cfg)
+		data, _ := json.MarshalIndent(cfgs[i], "", "    ")
 		fmt.Printf("%s\n", data)
 	}
 	// This is a placeholder for anything that the program might actually do
 	// with the configuration.
-}
-
-type Environment struct {
-	Name       string   `json:"name"`
-	NerthusURL string   `json:"nerthus_url"`
-	VisualeURL string   `json:"visuale_url"`
-	Systems    []System `json:"systems"`
-}
-type Artifact struct {
-	ID    string `json:"id"`
-	Group string `json:"group"`
-}
-type Requirements struct {
-	RAM              string `json:"ram"`
-	Disk             string `json:"disk"`
-	CPU              int    `json:"cpu"`
-	PropertiesName   string `json:"properties_name"`
-	WebserverPortKey string `json:"webserver_port_key"`
-	NotClusterAble   bool   `json:"not_cluster_able"`
-	IsFrontend       bool   `json:"is_frontend"`
-	Roles            []any  `json:"roles"`
-	Services         []any  `json:"services"`
-}
-type ServiceInfo struct {
-	Name         string       `json:"name"`
-	ServiceType  string       `json:"service_type"`
-	HealthType   string       `json:"health_type"`
-	APIPath      string       `json:"api_path"`
-	Artifact     Artifact     `json:"artifact"`
-	Requirements Requirements `json:"requirements"`
-}
-type Service struct {
-	Name       string      `json:"name"`
-	Definition ServiceInfo `json:"definition"`
-}
-type Cluster struct {
-	Name     string    `json:"name"`
-	Node     Node      `json:"node"`
-	Services []Service `json:"services"`
-	Internal bool      `json:"internal"`
-}
-type Node struct {
-	Os   string `json:"os"`
-	Arch string `json:"arch"`
-	Size string `json:"size"`
-}
-type System struct {
-	Name          string    `json:"name"`
-	Domain        string    `json:"domain"`
-	RoutingMethod string    `json:"routing_method"`
-	Cidr          string    `json:"cidr"`
-	Zone          string    `json:"zone"`
-	Clusters      []Cluster `json:"clusters"`
+	return
 }
 
 func Load(dir string, files []string, fs iofs.FS, dest any) error {
 	sbragi.Info("loading", "dir", dir, "files", files)
 	overlay := make(map[string]load.Source)
 	err := iofs.WalkDir(fs, ".", func(path string, d iofs.DirEntry, err error) error {
+		sbragi.Info("reading fs", "path", path)
 		if d.IsDir() {
 			return nil
 		}

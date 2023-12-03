@@ -28,8 +28,9 @@ package config
 	webserver_port_key: string
 	not_cluster_able:   bool
 	is_frontend:        bool
-	roles: [...string]
-	services: [...#Service]
+	features: [...#Features]
+	packages: [...#Packages]
+	services: [...string]
 }
 
 #Artifact: {

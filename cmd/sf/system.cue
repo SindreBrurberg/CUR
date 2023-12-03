@@ -15,6 +15,7 @@ systems: [#CO]
 	name: "nerthus"
 	node: {
 		size: "t4g.medium"
+		os:   "Debian"
 	}
 	services: [{
 		name:       "nerthus"
